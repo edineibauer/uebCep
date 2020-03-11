@@ -105,7 +105,7 @@ if (empty($data['data']) && defined('GEOCODE') && !empty(GEOCODE)) {
         //find values in Google Geo Code $retorno content
         foreach ($retorno['address_components'] as $component) {
             if (in_array("postal_code", $component['types']))
-                $param['cep'] = $component['long_name'];
+                $param['cep'] = str_replace("-", "", $component['long_name']);
             elseif (in_array("route", $component['types']))
                 $param['rua'] = $component['long_name'];
             elseif (in_array("sublocality_level_1", $component['types']))
