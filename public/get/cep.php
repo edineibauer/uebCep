@@ -1,6 +1,6 @@
 <?php
 
-use \Helpers\Helper;
+use \Cep\Cep;
 
 $cep = $link->getVariaveis()[0];
 
@@ -65,7 +65,7 @@ function createCidadeAndCep(string $cep, string $bairro, string $rua, string $ci
  * Busca em CEP aberto
  */
 if (defined('CEPABERTO') && !empty(CEPABERTO)) {
-    $retorno = Helper::cepAberto($cep);
+    $retorno = Cep::cepAberto($cep);
     if (!empty($retorno) && !empty($retorno['cidade']['nome'])) {
         /**
          * Teve retorno, faz o cadastro na base
@@ -80,7 +80,7 @@ if (defined('CEPABERTO') && !empty(CEPABERTO)) {
  * Busca em GeoCode
  */
 if (empty($data['data']) && defined('GEOCODE') && !empty(GEOCODE)) {
-    $retorno = Helper::cepGeoCode($cep);
+    $retorno = Cep::cepGeoCode($cep);
 
     if (!empty($retorno)) {
         /**

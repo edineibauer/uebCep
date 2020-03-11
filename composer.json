@@ -10,5 +10,10 @@
     ],
     "require": {
         "ueb/dashboard": "^1.1"
+    },
+    "autoload": {
+        "psr-0": {
+            "Cep": "public/src/"
+        }
     }
 }
