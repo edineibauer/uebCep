@@ -106,6 +106,8 @@ if (empty($data['data']) && defined('GEOCODE') && !empty(GEOCODE)) {
         foreach ($retorno['address_components'] as $component) {
             if (in_array("postal_code", $component['types']))
                 $param['cep'] = $component['long_name'];
+            elseif (in_array("route", $component['types']))
+                $param['rua'] = $component['long_name'];
             elseif (in_array("sublocality_level_1", $component['types']))
                 $param['bairro'] = $component['long_name'];
             elseif (in_array("administrative_area_level_2", $component['types']))
