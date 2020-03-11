@@ -1,0 +1,14 @@
+{
+    "name": "ueb/cep",
+    "description": "tem como objetivo trazer um conjunto de ferramentas e entidade para trabalhar com CEPs",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Edinei J. Bauer",
+            "email": "edineibauer@gmail.com"
+        }
+    ],
+    "require": {
+        "ueb/dashboard": "^1.1"
+    }
+}
