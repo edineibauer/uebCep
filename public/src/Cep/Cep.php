@@ -41,7 +41,7 @@ class Cep
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
             $result = json_decode(curl_exec($ch), !0);
-            return ($result['status'] === "OK" ? $result['results'] : []);
+            return ($result['status'] === "OK" ? $result['results'][0] : []);
         }
         return 'token GEO CODE não definido';
     }

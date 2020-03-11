@@ -1,7 +1,5 @@
 <?php
 
-use \Cep\Cep;
-
 $cep = $link->getVariaveis()[0];
 
 /**
@@ -23,56 +21,61 @@ $cep = $link->getVariaveis()[0];
  */
 function createCidadeAndCep(string $cep, string $bairro, string $rua, string $cidade, string $estado, string $pais, string $latitude, string $longitude, string $ddd, string $ibge, string $altitude)
 {
-    $idCidade = 0;
-    $read = new \Conn\Read();
-    $create = new \Conn\Create();
 
-    if (!empty($cidade)) {
-        $read->exeRead("cidades", "WHERE nome = '{$cidade}' && ddd = :ddd", "ddd={$ddd}");
-        if ($read->getResult()) {
-            $idCidade = $read->getResult()[0]['id'];
-        } else {
-            $create->exeCreate("cidades", [
-                "nome" => $cidade,
-                "ddd" => $ddd,
-                "ibge" => $ibge,
-                "estado" => $estado,
-                "pais" => $pais,
-                "altitude" => $altitude
-            ]);
-
-            if (empty($create->getErro()) && $create->getResult() && !empty($cep)) {
-                $idCidade = $create->getResult();
+    if (!empty($cep)) {
+        $create = new \Conn\Create();
+        if (!empty($latitude) && !empty($longitude)) {
+            $read = new \Conn\Read();
+            $read->exeRead("coordenadas", "WHERE cep = :cep", "cep={$cep}");
+            if (!$read->getResult()) {
+                $create->exeCreate("coordenadas", [
+                    "cep" => $cep,
+                    "latitude" => $latitude,
+                    "longitude" => $longitude
+                ]);
             }
         }
 
-        if ($idCidade !== 0) {
-            $create->exeCreate("cep", [
-                "cep" => $cep,
-                "cidade" => $idCidade,
-                "bairro" => $bairro,
-                "rua" => $rua,
-                "latitude" => $latitude,
-                "longitude" => $longitude
-            ]);
-        }
+        $create->exeCreate("cep", [
+            "cep" => $cep,
+            "cidade" => $cidade,
+            "estado" => $estado,
+            "pais" => $pais,
+            "bairro" => $bairro,
+            "rua" => $rua,
+            "ddd" => $ddd,
+            "ibge" => $ibge,
+            "altitude" => $altitude,
+        ]);
     }
-
-    return $idCidade;
 }
 
 /**
  * Busca em CEP aberto
  */
 if (defined('CEPABERTO') && !empty(CEPABERTO)) {
-    $retorno = Cep::cepAberto($cep);
+    $retorno = \Cep\Cep::cepAberto($cep);
     if (!empty($retorno) && !empty($retorno['cidade']['nome'])) {
         /**
          * Teve retorno, faz o cadastro na base
          */
-        $cidadeId = createCidadeAndCep($retorno['cep'] ?? "", $retorno['bairro'] ?? "", $retorno['logradouro'] ?? "", $retorno['cidade']['nome'] ?? "", $retorno['estado']['sigla'] ?? "", "BR", $retorno['latitude'] ?? "", $retorno['longitude'] ?? "", $retorno['cidade']['ddd'] ?? "", $retorno['cidade']['ibge'] ?? "", $retorno['altitude'] ?? "");
+        $param = [
+            "cep" => $retorno['cep'] ?? "",
+            "cidade" => $retorno['cidade']['nome'] ?? "",
+            "estado" => $retorno['estado']['sigla'] ?? "",
+            "pais" => "BR",
+            "bairro" => $retorno['bairro'] ?? "",
+            "rua" => $retorno['logradouro'] ?? "",
+            "latitude" => $retorno['latitude'] ?? "",
+            "longitude" => $retorno['longitude'] ?? "",
+            "ddd" => $retorno['cidade']['ddd'] ?? "",
+            "ibge" => $retorno['cidade']['ibge'] ?? "",
+            "altitude" => $retorno['altitude'] ?? ""
+        ];
 
-        $data['data'] = ['cidade' => $cidadeId, "bairro" => $retorno['bairro'] ?? "", "rua" => $retorno['logradouro'] ?? ""];
+        createCidadeAndCep($param['cep'], $param['bairro'], $param['rua'], $param['cidade'], $param['estado'], $param['pais'], $param['latitude'], $param['longitude'], $param['ddd'], $param['ibge'], $param['altitude']);
+
+        $data['data'] = $param;
     }
 }
 
@@ -80,7 +83,7 @@ if (defined('CEPABERTO') && !empty(CEPABERTO)) {
  * Busca em GeoCode
  */
 if (empty($data['data']) && defined('GEOCODE') && !empty(GEOCODE)) {
-    $retorno = Cep::cepGeoCode($cep);
+    $retorno = \Cep\Cep::cepGeoCode($cep);
 
     if (!empty($retorno)) {
         /**
@@ -99,7 +102,7 @@ if (empty($data['data']) && defined('GEOCODE') && !empty(GEOCODE)) {
             "longitude" => $retorno['geometry']['location']['lng'],
             "ddd" => "",
             "ibge" => "",
-            "altitude" => "",
+            "altitude" => ""
         ];
 
         //find values in Google Geo Code $retorno content
@@ -118,8 +121,8 @@ if (empty($data['data']) && defined('GEOCODE') && !empty(GEOCODE)) {
                 $param['pais'] = $component['short_name'];
         }
 
-        $cidadeId = createCidadeAndCep($param['cep'], $param['bairro'], $param['rua'], $param['cidade'], $param['estado'], $param['pais'], $param['latitude'], $param['longitude'], $param['ddd'], $param['ibge'], $param['altitude']);
+        createCidadeAndCep($param['cep'], $param['bairro'], $param['rua'], $param['cidade'], $param['estado'], $param['pais'], $param['latitude'], $param['longitude'], $param['ddd'], $param['ibge'], $param['altitude']);
 
-        $data['data'] = ['cidade' => $cidadeId, "bairro" => $param['bairro'], "rua" => $param['rua']];
+        $data['data'] = $param;
     }
 }
