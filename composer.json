@@ -9,7 +9,7 @@
         }
     ],
     "require": {
-        "ueb/dashboard": "^1.1"
+        "ueb/dashboard": "*"
     },
     "autoload": {
         "psr-0": {
