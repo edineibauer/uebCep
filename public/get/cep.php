@@ -1,6 +1,6 @@
 <?php
 
-$cep = $link->getVariaveis()[0];
+$cep = $variaveis[0];
 
 /**
  * Cria Cidade, Cep e Coordenadas
