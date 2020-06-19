@@ -14,7 +14,7 @@ class Cep
     public static function cepAberto(string $cep)
     {
         if (defined("CEPABERTO")) {
-            $url = 'http://www.cepaberto.com/api/v3/cep?cep=' . $cep;
+            $url = 'https://www.cepaberto.com/api/v3/cep?cep=' . $cep;
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: Token token="' . CEPABERTO . '"'));
