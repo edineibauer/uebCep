@@ -26,7 +26,7 @@ function createCidadeAndCep(string $cep, string $bairro, string $rua, string $ci
         $create = new \Conn\Create();
         if (!empty($latitude) && !empty($longitude)) {
             $read = new \Conn\Read();
-            $read->exeRead("coordenadas", "WHERE cep = :cep", "cep={$cep}");
+            $read->exeRead("coordenadas", "WHERE cep = :cep", ["cep" => $cep]);
             if (!$read->getResult()) {
                 $create->exeCreate("coordenadas", [
                     "cep" => $cep,
