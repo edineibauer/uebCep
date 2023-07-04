@@ -1,6 +1,6 @@
 <?php
 
-$cep = $variaveis[0];
+$cep = strip_tags(trim($variaveis[0]));
 
 /**
  * Cria Cidade, Cep e Coordenadas
@@ -50,79 +50,86 @@ function createCidadeAndCep(string $cep, string $bairro, string $rua, string $ci
     }
 }
 
-/**
- * Busca em CEP aberto
- */
-if (defined('CEPABERTO') && !empty(CEPABERTO)) {
-    $retorno = \Cep\Cep::cepAberto($cep);
-    if (!empty($retorno) && !empty($retorno['cidade']['nome'])) {
-        /**
-         * Teve retorno, faz o cadastro na base
-         */
-        $param = [
-            "cep" => $retorno['cep'] ?? "",
-            "cidade" => $retorno['cidade']['nome'] ?? "",
-            "estado" => $retorno['estado']['sigla'] ?? "",
-            "pais" => "BR",
-            "bairro" => $retorno['bairro'] ?? "",
-            "rua" => $retorno['logradouro'] ?? "",
-            "latitude" => $retorno['latitude'] ?? "",
-            "longitude" => $retorno['longitude'] ?? "",
-            "ddd" => $retorno['cidade']['ddd'] ?? "",
-            "ibge" => $retorno['cidade']['ibge'] ?? "",
-            "altitude" => $retorno['altitude'] ?? ""
-        ];
+$read = new \Conn\Read();
+$read->exeRead("cep", "WHERE cep = :c ORDER BY id DESC LIMIT 1", ["c" => $cep]);
+if ($read->getResult()) {
+    $data['data'] = $read->getResult()[0];
+} else {
 
-        createCidadeAndCep($param['cep'], $param['bairro'], $param['rua'], $param['cidade'], $param['estado'], $param['pais'], $param['latitude'], $param['longitude'], $param['ddd'], $param['ibge'], $param['altitude']);
+    /**
+     * Busca em CEP aberto
+     */
+    if (defined('CEPABERTO') && !empty(CEPABERTO)) {
+        $retorno = \Cep\Cep::cepAberto($cep);
+        if (!empty($retorno) && !empty($retorno['cidade']['nome'])) {
+            /**
+             * Teve retorno, faz o cadastro na base
+             */
+            $param = [
+                "cep" => $retorno['cep'] ?? "",
+                "cidade" => $retorno['cidade']['nome'] ?? "",
+                "estado" => $retorno['estado']['sigla'] ?? "",
+                "pais" => "BR",
+                "bairro" => $retorno['bairro'] ?? "",
+                "rua" => $retorno['logradouro'] ?? "",
+                "latitude" => $retorno['latitude'] ?? "",
+                "longitude" => $retorno['longitude'] ?? "",
+                "ddd" => $retorno['cidade']['ddd'] ?? "",
+                "ibge" => $retorno['cidade']['ibge'] ?? "",
+                "altitude" => $retorno['altitude'] ?? ""
+            ];
 
-        $data['data'] = $param;
-    }
-}
+            createCidadeAndCep($param['cep'], $param['bairro'], $param['rua'], $param['cidade'], $param['estado'], $param['pais'], $param['latitude'], $param['longitude'], $param['ddd'], $param['ibge'], $param['altitude']);
 
-/**
- * Busca em GeoCode
- */
-if (empty($data['data']) && defined('GEOCODE') && !empty(GEOCODE)) {
-    $retorno = \Cep\Cep::cepGeoCode($cep);
-
-    if (!empty($retorno)) {
-        /**
-         * Teve retorno faz o cadastro na base
-         */
-
-        //default parameters
-        $param = [
-            "cep" => "",
-            "cidade" => "",
-            "estado" => "",
-            "pais" => "",
-            "bairro" => "",
-            "rua" => "",
-            "latitude" => $retorno['geometry']['location']['lat'],
-            "longitude" => $retorno['geometry']['location']['lng'],
-            "ddd" => "",
-            "ibge" => "",
-            "altitude" => ""
-        ];
-
-        //find values in Google Geo Code $retorno content
-        foreach ($retorno['address_components'] as $component) {
-            if (in_array("postal_code", $component['types']))
-                $param['cep'] = str_replace("-", "", $component['long_name']);
-            elseif (in_array("route", $component['types']))
-                $param['rua'] = $component['long_name'];
-            elseif (in_array("sublocality_level_1", $component['types']))
-                $param['bairro'] = $component['long_name'];
-            elseif (in_array("administrative_area_level_2", $component['types']))
-                $param['cidade'] = $component['long_name'];
-            elseif (in_array("administrative_area_level_1", $component['types']))
-                $param['estado'] = $component['short_name'];
-            elseif (in_array("country", $component['types']))
-                $param['pais'] = $component['short_name'];
+            $data['data'] = $param;
         }
+    }
 
-        createCidadeAndCep($param['cep'], $param['bairro'], $param['rua'], $param['cidade'], $param['estado'], $param['pais'], $param['latitude'], $param['longitude'], $param['ddd'], $param['ibge'], $param['altitude']);
+    /**
+     * Busca em GeoCode
+     */
+    if (empty($data['data']) && defined('GEOCODE') && !empty(GEOCODE)) {
+        $retorno = \Cep\Cep::cepGeoCode($cep);
 
-        $data['data'] = $param;
+        if (!empty($retorno)) {
+            /**
+             * Teve retorno faz o cadastro na base
+             */
+
+            //default parameters
+            $param = [
+                "cep" => "",
+                "cidade" => "",
+                "estado" => "",
+                "pais" => "",
+                "bairro" => "",
+                "rua" => "",
+                "latitude" => $retorno['geometry']['location']['lat'],
+                "longitude" => $retorno['geometry']['location']['lng'],
+                "ddd" => "",
+                "ibge" => "",
+                "altitude" => ""
+            ];
+
+            //find values in Google Geo Code $retorno content
+            foreach ($retorno['address_components'] as $component) {
+                if (in_array("postal_code", $component['types']))
+                    $param['cep'] = str_replace("-", "", $component['long_name']);
+                elseif (in_array("route", $component['types']))
+                    $param['rua'] = $component['long_name'];
+                elseif (in_array("sublocality_level_1", $component['types']))
+                    $param['bairro'] = $component['long_name'];
+                elseif (in_array("administrative_area_level_2", $component['types']))
+                    $param['cidade'] = $component['long_name'];
+                elseif (in_array("administrative_area_level_1", $component['types']))
+                    $param['estado'] = $component['short_name'];
+                elseif (in_array("country", $component['types']))
+                    $param['pais'] = $component['short_name'];
+            }
+
+            createCidadeAndCep($param['cep'], $param['bairro'], $param['rua'], $param['cidade'], $param['estado'], $param['pais'], $param['latitude'], $param['longitude'], $param['ddd'], $param['ibge'], $param['altitude']);
+
+            $data['data'] = $param;
+        }
     }
 }
