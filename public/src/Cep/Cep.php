@@ -21,7 +21,11 @@ class Cep
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            return json_decode(curl_exec($ch), !0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $r = curl_exec($ch);
+            curl_close($ch);
+
+            return json_decode($r, true);
         }
         return 'token CEP ABERTO não definido';
     }
