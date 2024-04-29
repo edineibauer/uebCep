@@ -43,9 +43,9 @@ function createCidadeAndCep(string $cep, string $bairro, string $rua, string $ci
             "pais" => $pais,
             "bairro" => $bairro,
             "rua" => $rua,
-            "ddd" => $ddd,
-            "ibge" => $ibge,
-            "altitude" => $altitude,
+            "ddd" => empty($ddd) ? null : $ddd,
+            "ibge" => empty($ibge) ? null : $ibge,
+            "altitude" => empty($altitude) ? null : $altitude,
         ]);
     }
 }
